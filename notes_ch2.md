@@ -36,3 +36,22 @@ Although document database are called schema-less, it's misleading because the c
 
 - schema on read: easy to alter and add a field such as name becomes first and last name (two separate fields)
 - schema on write: takes time to alter schema and update every row
+
+#Query Languages for Data
+SQL: a declarative query language which hides implementation details of the database engines, which makes it possible for the database system to introduce performance improvements without requiring any changes to queries.
+
+#Property Graphs
+In the property graph model, each vertex consists of:
+
+- a unique ID
+- a set of outgoing edges
+- a set of incoming edges
+- a collection of properties (key-value pairs)
+
+Each edge consists of:
+
+- a unique ID
+- The vertex at which the edge starts (the tail vertex)
+- The vertex at which the edge ends(the head vertex)
+- A label to describe the kind of relationship between the two vertices
+- a collection of properties (key-value pairs)
