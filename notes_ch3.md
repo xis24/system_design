@@ -15,4 +15,19 @@ simplest indexing strategy: keep an in-memory hash map where every key is mapped
   since each segment has its own in-memory hash table and they are relative small due to merge, lookups don't need to check many hash maps.(starting from most recent segments -> second most recent segment)
 
 - Some of implementation issues
-  -- File format
+  - File format: binary format that first encodes the length of a string in bytes, followed by the raw string
+  - Deleting record: have to append a special deletion record (tombstone). When log segments are merged, the tombstone tells the merge process to discard any previous value for the deleted key
+  - Crash recovery: then in-memory hash map might be lost. So before we can store a snapshot of each segment's hash map on disk which can be loaded into memory more quickly.
+  - Partially written record: include checksums, allowing such corrupted parts of the log to be detected and ignored
+  - Concurrency control: as writes are appended to the log in a strictly sequential order, to have only one writer thread. Data file is append-only and immutable. So read could be done in multi-thread.
+
+**Append only log**
+
+- Appending and segment merging are sequential write operations that are faster than random writes.
+- Concurrency and crash recovery are much simpler if segment files are append-only or immutable. For example, crash happens leave corrupted file
+- Merging old segments avoids the problem of data files getting fragmented over time
+
+#### limitation of hash table index
+
+- hash table must fit in-memory and maintain a hash on disk and on-disk hash map is really slow
+- Range queries are not efficient. For example, key like kitty00000 and kitty99999
