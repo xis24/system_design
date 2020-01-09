@@ -31,3 +31,42 @@ simplest indexing strategy: keep an in-memory hash map where every key is mapped
 
 - hash table must fit in-memory and maintain a hash on disk and on-disk hash map is really slow
 - Range queries are not efficient. For example, key like kitty00000 and kitty99999
+
+### SSTable and LSM-Trees
+
+SSTable (sorted string table): key value pair is sorted by key
+
+Pro of SSTable
+
+- Merging segments is simple and efficient, even if the files are bigger than the available memory. What if key appears in different segment? We keep the value from the most recent segment and discard the values in older segments
+- in-memory **all-keys** are not needed. You only need a couple of keys to locate the requested key since they are sorted.
+- Since read requests need to scan over several key-value paris in the requested range, it's possible to group those records into a block and compress it before writing it to disk
+
+#### Constructing and maintaining SSTables
+
+storage engine works as follows
+
+- when a write comes in, add it to an in-memory balanced tree data structure (_memtable_).
+- when memtable gets bigger than a few megebytes write it out to disk as an SSTable file. The new SSTable file becomes the most recent segment of database. While SSTable is being written out to disk, writes can continue to a new memtable instance.
+- serve a read request, first try to find the key in the memtable. THen in the most recent on-disk segment, then next older segment
+
+- run a merging and compacting process in the background to combine segment files and to discard overwritten or deleted values.
+
+> if the databse crashes, the most recent writes (in memtable but not in disk yet) are lost
+
+we can keep a separate log on disk to which every write is immediately appended. Don't need to be sorted because it's to restore the memtable when crashes. Every time memtable is write to disk, this log can be deleted
+
+#### Making an LSM-tree out of SSTables
+
+SSTables and memtable is introduced in Google's Bigtable paper
+
+LSM - tree : Log-Structured Merge-Tree by Patrick O'Neil
+Lucene, indexing engine for full-text search used by Elasticsearch and Solr uses similar method for storing its term dictionary.
+
+#### performance optimizations
+
+LSM - tree algo can be slow when looking up keys that don't exist. In order to solve this issue, storage engine often use **bloom filters** (a memory-efficient data structure for approximating the contents of a set. It can tell you if a key does not appear in the db)
+
+There are also different strategy to determine the order and timing of how SSTables are compacted and merged: size tiered and leveled compaction.
+In size-tiered compaction, newer and smaller SSTables are successively merged into older and large SSTables.
+In level compaction, the key range is split up into smaller SSTables and older data is moved into separate levels which allows the compaction to proceed more incrementally and use less disk space.
