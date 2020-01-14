@@ -70,3 +70,52 @@ LSM - tree algo can be slow when looking up keys that don't exist. In order to s
 There are also different strategy to determine the order and timing of how SSTables are compacted and merged: size tiered and leveled compaction.
 In size-tiered compaction, newer and smaller SSTables are successively merged into older and large SSTables.
 In level compaction, the key range is split up into smaller SSTables and older data is moved into separate levels which allows the compaction to proceed more incrementally and use less disk space.
+
+### B-Tree
+
+most widely used indexing structure, standard index implementation in almost all relational database sometimes nonrelational db too.
+
+_similarity to SSTables_: keep key-value paris sorted by key which allows efficient key-value lookups and range queries
+**difference**: log-structured indexes break the db down into variable size segments, and always write sequentially. B-tree break the database down into fixed-size blocks or pages, traditionally 4KB in size, and read or write one page at a time. Its design corresponds to fixed-size disk arrangement.
+
+each page can use an address or location which allows one page to refer to another. One page is designated as the root of the B-tree (starting point).
+The number of references to child pages in one of page the B-tree is called the **branching factor**. In practice, the branching factor depending on the amount of space required to store the page references and range boundaries (several hundred)
+
+_operation_:
+
+- Add a new key -> find the page whose range includes the new key -> add it to that page
+
+- update the value for existing key -> find the leaf page containing that key -> change the value -> write the page back to disk
+
+- no free space for new key -> split into two half-full page -> parent page is updated
+
+By this algo, tree remains balanced, B-tree with N-keys always has depth log(n).
+4 level tree of 4KB pages with branching factor 500 can store up to 256TB
+
+In order to prevent crash B-tree DB to leave oraphan page, it's common to include an additional data structure on disk: a write-ahead log(WAL, or redo log) This is append-only file to which every B-tree modification must be written before it can be applied the page of tree itself.
+
+Concurrency is protected by _latches_
+
+#### B-tree optimization
+
+- Copy-on-write replace WAL for crash recovery
+- saving more space in pages by abbreviating the key
+
+#### B-Tree vs LSM-Tree
+
+LSM-Tree faster for writes, slow at read b/c checking different data structure and SSTables
+B-Tree faster for read
+
+##### pro of LSM-tree
+
+- B-tree index write every data at least twice: 1. write ahead log 2. tree page itself (perhaps again when splitting)
+- Log structured index also rewrite data multiple times due to repeated compaction and merging of SSTable. This effect is called write amplification.
+- LSM tree are able to have higher write than B-trees b/c they have lower write amplification, and they sequentially write compact SSTable files rather than having to overwrite serveral pages in the tree. Sequential writes are much faster than random write.
+- LSM tree can be compressed better and thus small disk usage than B-trees. B-tree leaves fragmentation when splitting.
+
+##### con of LSM-tree
+
+- compaction process affect performance of ongoing reads and writes.
+- issue with compaction arises at high write throughput: disk write bandwidth needs to be shared between inital write and the compaction thread in the background. If compaction is not well configed, it can happen compaction can't keep up with incoming writes.
+- pro of B-tree: key exists in exactly one place in the index, but log structured storage engine may have multiple copies of the same key in different segment.
+- B-tree provides consistent performance. In new datastore, log-structured indexes are becoming popular.
