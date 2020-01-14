@@ -116,6 +116,6 @@ B-Tree faster for read
 ##### con of LSM-tree
 
 - compaction process affect performance of ongoing reads and writes.
-- issue with compaction arises at high write throughput: disk write bandwidth needs to be shared between inital write and the compaction thread in the background. If compaction is not well configed, it can happen compaction can't keep up with incoming writes.
+- issue with compaction arises at high write throughput: disk write bandwidth needs to be shared between inital write and the compaction thread in the background. If compaction is not well configured, it can happen compaction can't keep up with incoming writes.
 - pro of B-tree: key exists in exactly one place in the index, but log structured storage engine may have multiple copies of the same key in different segment.
 - B-tree provides consistent performance. In new datastore, log-structured indexes are becoming popular.
