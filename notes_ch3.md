@@ -2,7 +2,7 @@
 
 ## Storage Engine
 
-two types: log-structured and page-oriented
+TWO types: log-structured and page-oriented
 index data structure: speed up read queries, but every index slows down writes.
 
 ### Hash indexes
@@ -47,12 +47,12 @@ Pro of SSTable
 storage engine works as follows
 
 - when a write comes in, add it to an in-memory balanced tree data structure (_memtable_).
-- when memtable gets bigger than a few megebytes write it out to disk as an SSTable file. The new SSTable file becomes the most recent segment of database. While SSTable is being written out to disk, writes can continue to a new memtable instance.
+- when memtable gets bigger than a few megabytes write it out to disk as an SSTable file. The new SSTable file becomes the most recent segment of database. While SSTable is being written out to disk, writes can continue to a new memtable instance.
 - serve a read request, first try to find the key in the memtable. THen in the most recent on-disk segment, then next older segment
 
 - run a merging and compacting process in the background to combine segment files and to discard overwritten or deleted values.
 
-> if the databse crashes, the most recent writes (in memtable but not in disk yet) are lost
+> if the database crashes, the most recent writes (in memtable but not in disk yet) are lost
 
 we can keep a separate log on disk to which every write is immediately appended. Don't need to be sorted because it's to restore the memtable when crashes. Every time memtable is write to disk, this log can be deleted
 
@@ -65,7 +65,7 @@ Lucene, indexing engine for full-text search used by Elasticsearch and Solr uses
 
 #### performance optimizations
 
-LSM - tree algo can be slow when looking up keys that don't exist. In order to solve this issue, storage engine often use **bloom filters** (a memory-efficient data structure for approximating the contents of a set. It can tell you if a key does not appear in the db)
+LSM - tree algorithm can be slow when looking up keys that don't exist. In order to solve this issue, storage engine often use **bloom filters** (a memory-efficient data structure for approximating the contents of a set. It can tell you if a key does not appear in the db)
 
 There are also different strategy to determine the order and timing of how SSTables are compacted and merged: size tiered and leveled compaction.
 In size-tiered compaction, newer and smaller SSTables are successively merged into older and large SSTables.
@@ -89,10 +89,10 @@ _operation_:
 
 - no free space for new key -> split into two half-full page -> parent page is updated
 
-By this algo, tree remains balanced, B-tree with N-keys always has depth log(n).
+By this algorithm, tree remains balanced, B-tree with N-keys always has depth log(n).
 4 level tree of 4KB pages with branching factor 500 can store up to 256TB
 
-In order to prevent crash B-tree DB to leave oraphan page, it's common to include an additional data structure on disk: a write-ahead log(WAL, or redo log) This is append-only file to which every B-tree modification must be written before it can be applied the page of tree itself.
+In order to prevent crash B-tree DB to leave orphan page, it's common to include an additional data structure on disk: a write-ahead log(WAL, or redo log) This is append-only file to which every B-tree modification must be written before it can be applied the page of tree itself.
 
 Concurrency is protected by _latches_
 
@@ -110,12 +110,12 @@ B-Tree faster for read
 
 - B-tree index write every data at least twice: 1. write ahead log 2. tree page itself (perhaps again when splitting)
 - Log structured index also rewrite data multiple times due to repeated compaction and merging of SSTable. This effect is called write amplification.
-- LSM tree are able to have higher write than B-trees b/c they have lower write amplification, and they sequentially write compact SSTable files rather than having to overwrite serveral pages in the tree. Sequential writes are much faster than random write.
+- LSM tree are able to have higher write than B-trees b/c they have lower write amplification, and they sequentially write compact SSTable files rather than having to overwrite several pages in the tree. Sequential writes are much faster than random write.
 - LSM tree can be compressed better and thus small disk usage than B-trees. B-tree leaves fragmentation when splitting.
 
 ##### con of LSM-tree
 
 - compaction process affect performance of ongoing reads and writes.
-- issue with compaction arises at high write throughput: disk write bandwidth needs to be shared between inital write and the compaction thread in the background. If compaction is not well configured, it can happen compaction can't keep up with incoming writes.
+- issue with compaction arises at high write throughput: disk write bandwidth needs to be shared between initial write and the compaction thread in the background. If compaction is not well configured, it can happen compaction can't keep up with incoming writes.
 - pro of B-tree: key exists in exactly one place in the index, but log structured storage engine may have multiple copies of the same key in different segment.
-- B-tree provides consistent performance. In new datastore, log-structured indexes are becoming popular.
+- B-tree provides consistent performance. In new data store, log-structured indexes are becoming popular.
