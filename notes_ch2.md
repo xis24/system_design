@@ -2,7 +2,8 @@
 
 Since most programming language we use today is OOD, in SQL data is stored in tables. The disconnect between the models is called impedance mismatch. Object relational mapping (ORM) framework like Hibernate reduce amount the boilerplate code for this translation layer.
 
-##Many-to-One and Many-to-Many Relationships
+## Many-to-One and Many-to-Many Relationships
+
 Stores ID instead of plain text in database:
 
 - consistent style and spelling across profiles
@@ -16,7 +17,7 @@ Stores ID instead of plain text in database removes duplication that is the key 
 ##Are document database repeating history ?
 Although document database works well for one to many relationship, it struggles to many to many relationships.
 
-##Relational vs Document database today
+## Relational vs Document database today
 
 - document database:
 
@@ -37,10 +38,12 @@ Although document database are called schema-less, it's misleading because the c
 - schema on read: easy to alter and add a field such as name becomes first and last name (two separate fields)
 - schema on write: takes time to alter schema and update every row
 
-#Query Languages for Data
+# Query Languages for Data
+
 SQL: a declarative query language which hides implementation details of the database engines, which makes it possible for the database system to introduce performance improvements without requiring any changes to queries.
 
-#Property Graphs
+# Property Graphs
+
 In the property graph model, each vertex consists of:
 
 - a unique ID
